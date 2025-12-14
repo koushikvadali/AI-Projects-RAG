@@ -1,0 +1,8 @@
+streamlit
+langchain
+langchain-openai
+langchain-community 
+azure-search-documents
+azure-identity
+pypdf
+python-dotenv
