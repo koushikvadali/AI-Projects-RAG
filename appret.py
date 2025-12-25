@@ -10,7 +10,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 # ============================================================
 # 1. CONFIG
 # ============================================================
-RETRIEVAL_TOP = 3  # Azure uses `top`, not `k`
+RETRIEVAL_TOP = 12  # Azure uses `top`, not `k`
 
 # ============================================================
 # 2. Load Secrets
@@ -45,6 +45,7 @@ def build_components(top: int):
 
     retriever = vector_store.as_retriever(
         search_type="hybrid",
+        k=RETRIEVAL_TOP,
     )
 
     # ---- LLM ----
@@ -97,6 +98,24 @@ if user_input := st.chat_input("Ask a question about your PDF..."):
                 # 1️⃣ Retrieve documents (HYBRID)
                 # ------------------------------------------------
                 docs = retriever.invoke(user_input)
+
+                #print block to see retrieved docs
+
+                print(f"\n--- DEBUG: Retrieved {len(docs)} chunks ---")
+                
+                # Create a collapsible section in Streamlit so it doesn't clutter the UI
+                with st.expander(f"🔍 Debug: View all {len(docs)} retrieved chunks"):
+                    for i, doc in enumerate(docs):
+                        source_page = doc.metadata.get("page", "N/A")
+                        preview = doc.page_content.replace("\n", " ")[:100] # Clean preview for terminal
+
+                        # # 1. Print to Terminal
+                        # print(f"[Chunk {i}] [Page {source_page}] {preview}...")
+
+                        # 2. Show in Streamlit
+                        st.markdown(f"**Chunk {i} | Page {source_page}**")
+                        st.text(doc.page_content) # st.text preserves formatting better for raw text
+                        st.divider()
 
                 if not docs:
                     st.markdown("I don't know.")
@@ -151,7 +170,7 @@ Context:
                 )
 
                 raw_text = response.content
-                print(raw_text)
+                # print(raw_text)
 
                 # ------------------------------------------------
                 # 5️⃣ Parse LLM output
